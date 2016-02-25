@@ -1,0 +1,35 @@
+#!/usr/bin/env ruby
+require 'bundler/setup'
+require 'optionparser'
+require 'skype-export'
+
+options = {}
+OptionParser.new do |opts|
+  opts.banner = "Usage: export-skype-history -u SKYPE_USERNAME -t TARGET_TO_EXPORT"
+
+  opts.on("-u SKYPE_USERNAME", "--skype-username SKYPE_USERNAME", "Your skype username.") do |u|
+    options[:skype_username] = u
+  end
+
+  opts.on("-t TARGET_TO_EXPORT", "--target-username TARGET_TO_EXPORT",
+          "The user who you want to export your history with.") do |t|
+    options[:target_username] = t
+  end
+
+  opts.on("-o FILE", "--output-file FILE",
+          "File to output the history to, otherwise it will just be printed") do |o|
+    options[:output_file] = o
+  end
+end.parse!
+
+if options[:skype_username].nil?
+  puts "You need to provide your username -u SKYPE_USERNAME"
+  exit
+elsif options[:target_username].nil?
+  puts "You need to provide a username to export -t TARGET_TO_EXPORT"
+  exit
+end
+
+database = SkypeExport.database_for_user(options[:skype_username])
+dataset = SkypeExport.history_with_user(options[:target_username], database)
+SkypeExport.write_to_file(dataset, "#{options[:target_username]}.txt")
