@@ -16,10 +16,11 @@ Specify your skype username and the name of the person whose logs with you you w
     
 this will create a file in the current directory named `YOUR_FRIENDS_SKYPE_USERNAME.txt` with the full history.
 
+**Note: I don't have skype on a windows or linux box to test, so I borrowed logic from @aigarsdz main.db location logic from the [runoff gem](https://github.com/aigarsdz/runoff), which was handy, but didn't quite do what I wanted. If you need to export everything in your skype db, I suggest looking into that gem instead.**
+
 ## Contributing
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/skype-export. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
-
 
 ## License
 
