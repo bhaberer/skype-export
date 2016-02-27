@@ -2,7 +2,8 @@ require 'sqlite3'
 require 'sequel'
 require 'skype-export/version'
 require 'skype-export/config'
-require 'skype-export/format'
+require 'skype-export/message'
+require 'skype-export/message/format'
 
 module SkypeExport
   def self.database_for_user(username)
@@ -17,8 +18,9 @@ module SkypeExport
 
   def self.write_to_file(dataset, filename)
     File.open(filename, 'w') do |file|
-      dataset.each do |row|
-        file.puts(SkypeExport::Format.message(row))
+      dataset.each do |message_hash|
+        message = SkypeExport::Message.new(message_hash)
+        file.puts(message.to_s) unless message.to_s.nil?
       end
     end
   end
