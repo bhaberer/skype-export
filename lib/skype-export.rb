@@ -5,6 +5,7 @@ require 'skype-export/config'
 require 'skype-export/message'
 require 'skype-export/message/format'
 
+# Module for exporting skype history.
 module SkypeExport
   def self.database_for_user(username)
     location = SkypeExport::Config.location(username)
@@ -12,7 +13,7 @@ module SkypeExport
   end
 
   def self.history_with_user(username, database)
-    fail 'Username cannot be blank.' if username.nil? || username == ''
+    raise 'Username cannot be blank.' if username.nil? || username == ''
     database[select_statement(username)]
   end
 
@@ -24,8 +25,6 @@ module SkypeExport
       end
     end
   end
-
-  private
 
   def self.select_statement(user, order = 'timestamp')
     "SELECT * FROM Messages WHERE chatname LIKE '%#{user}%' "\

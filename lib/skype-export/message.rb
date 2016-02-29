@@ -1,4 +1,6 @@
 module SkypeExport
+  # Class for formatting and managing the raw data retrieved from the Skype
+  #   main.db sqlite database.
   class Message
     attr_accessor :text, :from_name, :time, :type
 

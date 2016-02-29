@@ -1,6 +1,7 @@
 module SkypeExport
+  # Primarily configuration informationa bout the location of the skype db.
+  #   Copied from the runoff gem originally.
   module Config
-    # Copied from the runoff gem
     def self.location(skype_username)
       case RbConfig::CONFIG['host_os']
       when /mingw/
@@ -16,9 +17,11 @@ module SkypeExport
       end
     end
 
-    private
+    def self.format_windows_path(path)
+      path = path.gsub(/\\/, '/')
+      path.gsub(/^[a-zA-Z]:/, '')
+    end
 
-    # Copied from the runoff gem
     def self.get_default_skype_data_location_on_windows_8(skype_username)
       location = "#{ENV['HOME']}/AppData/Local/Packages"
       skype_folder = Dir["#{location}/Microsoft.SkypeApp*"].first
