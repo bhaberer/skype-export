@@ -3,33 +3,69 @@ require 'bundler/setup'
 require 'optionparser'
 require 'skype-export'
 
-options = {}
-OptionParser.new do |opts|
-  opts.banner = "Usage: export-skype-history -u SKYPE_USERNAME -t TARGET_TO_EXPORT"
+opts = {}
+OptionParser.new do |options|
+  options.banner = "Usage: export-skype-history -u SKYPE_USERNAME -t TARGET_TO_EXPORT"
 
-  opts.on("-u SKYPE_USERNAME", "--skype-username SKYPE_USERNAME", "Your skype username.") do |u|
-    options[:skype_username] = u
+  options.on("-y", "--by-year", "Output into yearly logs.") do |y|
+    opts[:yearly] = y
   end
 
-  opts.on("-t TARGET_TO_EXPORT", "--target-username TARGET_TO_EXPORT",
+  options.on("-m", "--by-month", "Output into monthly logs.") do |m|
+    opts[:monthly] = m
+  end
+
+  options.on("-u SKYPE_USERNAME", "--skype-username SKYPE_USERNAME", "Your skype username.") do |u|
+    opts[:skype_username] = u
+  end
+
+  options.on("-t TARGET_TO_EXPORT", "--target-username TARGET_TO_EXPORT",
           "The user who you want to export your history with.") do |t|
-    options[:target_username] = t
+    opts[:target] = t
   end
 
-  opts.on("-o FILE", "--output-file FILE",
+  options.on("-o FILE", "--output-file FILE",
           "File to output the history to, otherwise it will just be printed") do |o|
-    options[:output_file] = o
+    opts[:output_file] = o
   end
 end.parse!
 
-if options[:skype_username].nil?
+if opts[:skype_username].nil?
   puts "You need to provide your username -u SKYPE_USERNAME"
   exit
-elsif options[:target_username].nil?
+elsif opts[:target].nil?
   puts "You need to provide a username to export -t TARGET_TO_EXPORT"
   exit
 end
 
-database = SkypeExport.database_for_user(options[:skype_username])
-dataset = SkypeExport.history_with_user(options[:target_username], database)
-SkypeExport.write_to_file(dataset, "#{options[:target_username]}.txt")
+db = Dataset.database_for_user(opts[:skype_username])
+
+if opts[:monthly]
+  Dir.mkdir(opts[:target]) unless Dir.exist?(opts[:target])
+  date = Dataset.first_message_date_with_user(opts[:target], db)
+  date = { year: date.year, month: date.month }
+  current = Time.now
+
+  until date[:year] > current.year do
+    until date[:month] > 12
+      exit if (date[:month] > current.month && date[:year] == current.year)
+      dataset = Dataset.history_with_user_for_month(opts[:target], date[:year], date[:month], db)
+      SkypeExport.write_to_file(dataset, "#{opts[:target]}/#{date[:year]}.#{date[:month].to_s.rjust(2, '0')}.txt")
+      date[:month] += 1
+    end
+    date[:month] = 1
+    date[:year] += 1
+  end
+elsif opts[:yearly]
+  Dir.mkdir(opts[:target]) unless Dir.exist?(opts[:target])
+  year = Dataset.first_message_date_with_user(opts[:target], db).year
+  current_year = Time.now.year
+  until year > current_year do
+    dataset = Dataset.history_with_user_for_year(opts[:target], year, db)
+    SkypeExport.write_to_file(dataset, "#{opts[:target]}/#{year}.txt")
+    year += 1
+  end
+else
+  dataset = Dataset.history_with_user(opts[:target], db)
+  SkypeExport.write_to_file(dataset, "#{opts[:target]}.txt")
+end

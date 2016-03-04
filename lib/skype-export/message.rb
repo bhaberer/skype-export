@@ -21,6 +21,9 @@ module SkypeExport
     }.freeze
 
     def initialize(message_hash)
+      # Ensure the hash is sane
+      consistancy_check(message_hash)
+
       @type = MESSAGE_TYPES[message_hash[:type].to_s]
       self.text = message_hash[:body_xml]
       self.time = message_hash[:timestamp]
@@ -48,6 +51,16 @@ module SkypeExport
       body_text = Format.remote_emoticons(body_text)
       body_text = Format.remove_formatting_markup(body_text)
       @text = body_text
+    end
+
+    private
+
+    def consistancy_check(hash)
+      [:type, :body_xml, :timestamp, :from_dispname].each do |field|
+        unless hash.key?(field) && !hash[field].nil?
+          raise ArgumentError, "#{field} missing from message_hash"
+        end
+      end
     end
   end
 end
