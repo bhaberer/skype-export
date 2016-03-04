@@ -9,7 +9,9 @@ class Dataset
   end
 
   def self.first_message_date_with_user(username, database)
-    Time.at(history_with_user(username, database).first[:timestamp])
+    history = history_with_user(username, database)
+    raise ArgumentError, 'No history forund with that user' if history.empty?
+    Time.at(history.first[:timestamp])
   end
 
   def self.history_with_user(username, database)

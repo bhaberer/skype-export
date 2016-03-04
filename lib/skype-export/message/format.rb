@@ -6,6 +6,10 @@ module SkypeExport
       TEXT_MARKUP_REGEX =
         %r{(?:<[ibs] raw_pre="(.)" raw_post="(?:.)">)+([^<>]+)(?:<\/[ibs]>)+}
 
+      def self.remove_anchor_tags(body_text)
+        body_text.gsub(/<a[^>]+>([^<]+)<\/a>/, '\1')
+      end
+
       def self.unescape_html_entities(body_text)
         [%w(apos '), %w(quot "),
          %w(lt <), %w(gt >), %w(amp &)].each do |entity, replacement|

@@ -50,15 +50,16 @@ module SkypeExport
       body_text = Format.remove_monospaced_markup(body_text)
       body_text = Format.remote_emoticons(body_text)
       body_text = Format.remove_formatting_markup(body_text)
+      body_text = Format.remove_anchor_tags(body_text)
       @text = body_text
     end
 
     private
 
     def consistancy_check(hash)
-      [:type, :body_xml, :timestamp, :from_dispname].each do |field|
+      [:type, :timestamp, :from_dispname].each do |field|
         unless hash.key?(field) && !hash[field].nil?
-          raise ArgumentError, "#{field} missing from message_hash"
+          raise ArgumentError, "#{field} missing from message_hash; #{hash}"
         end
       end
     end
