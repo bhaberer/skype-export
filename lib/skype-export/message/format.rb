@@ -23,6 +23,11 @@ module SkypeExport
                        '{code}')
       end
 
+      def self.remove_quote_markup(body_text)
+        body_text.gsub(%r{<quote[^>]+><legacyquote>([^<]+)<\/legacyquote>},
+                       '\1')
+      end
+
       def self.remote_emoticons(body_text)
         body_text.gsub(%r{(<ss\stype=\".+\">|<\/ss>)}, '')
       end

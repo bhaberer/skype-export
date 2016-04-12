@@ -51,6 +51,7 @@ module SkypeExport
       body_text = Format.remote_emoticons(body_text)
       body_text = Format.remove_formatting_markup(body_text)
       body_text = Format.remove_anchor_tags(body_text)
+      body_text = Format.remove_quote_markup(body_text)
       @text = body_text
     end
 
