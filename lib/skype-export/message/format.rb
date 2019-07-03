@@ -19,8 +19,8 @@ module SkypeExport
       end
 
       def self.remove_monospaced_markup(body_text)
-        body_text.gsub(%r{<\/pre>|(<pre raw_pre="(!!\s|\{code\})".*>)},
-                       '{code}')
+        body_text.gsub(%r{(?:<pre raw_pre="\{code\}" raw_post="\{code\}">|<pre raw_pre="!! ">)(.+)<\/pre>},
+                       '{code}\1{code}')
       end
 
       def self.remove_quote_markup(body_text)
@@ -28,7 +28,7 @@ module SkypeExport
                        '\1')
       end
 
-      def self.remote_emoticons(body_text)
+      def self.remove_emoticons(body_text)
         body_text.gsub(%r{(<ss\stype=\".+\">|<\/ss>)}, '')
       end
 

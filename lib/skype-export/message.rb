@@ -48,7 +48,7 @@ module SkypeExport
       return if body_text.nil?
       body_text = Format.unescape_html_entities(body_text)
       body_text = Format.remove_monospaced_markup(body_text)
-      body_text = Format.remote_emoticons(body_text)
+      body_text = Format.remove_emoticons(body_text)
       body_text = Format.remove_formatting_markup(body_text)
       body_text = Format.remove_anchor_tags(body_text)
       body_text = Format.remove_quote_markup(body_text)
