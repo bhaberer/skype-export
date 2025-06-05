@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module SkypeExport
   # Class for formatting and managing the raw data retrieved from the Skype
   #   main.db sqlite database.
@@ -40,12 +42,13 @@ module SkypeExport
     end
 
     def time=(time)
-      time = Time.at(time) if time.is_a?(Fixnum)
+      time = Time.at(time) if time.is_a?(Integer)
       @time = time
     end
 
     def text=(body_text)
       return if body_text.nil?
+
       body_text = Format.unescape_html_entities(body_text)
       body_text = Format.remove_monospaced_markup(body_text)
       body_text = Format.remove_emoticons(body_text)
@@ -58,10 +61,8 @@ module SkypeExport
     private
 
     def consistancy_check(hash)
-      [:type, :timestamp, :from_dispname].each do |field|
-        unless hash.key?(field) && !hash[field].nil?
-          raise ArgumentError, "#{field} missing from message_hash; #{hash}"
-        end
+      %i[type timestamp from_dispname].each do |field|
+        raise ArgumentError, "#{field} missing from message_hash; #{hash}" unless hash.key?(field) && !hash[field].nil?
       end
     end
   end

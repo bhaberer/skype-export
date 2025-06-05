@@ -1,71 +1,91 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
+
 require 'bundler/setup'
 require 'optionparser'
 require 'skype-export'
 
 opts = {}
 OptionParser.new do |options|
-  options.banner = "Usage: export-skype-history -u SKYPE_USERNAME -t TARGET_TO_EXPORT"
+  options.banner = 'Usage: export-skype-history -u SKYPE_USERNAME -t TARGET_TO_EXPORT'
 
-  options.on("-y", "--by-year", "Output into yearly logs.") do |y|
+  options.on('-y', '--by-year', 'Output into yearly logs.') do |y|
     opts[:yearly] = y
   end
 
-  options.on("-m", "--by-month", "Output into monthly logs.") do |m|
+  options.on('-m', '--by-month', 'Output into monthly logs.') do |m|
     opts[:monthly] = m
   end
 
-  options.on("-u SKYPE_USERNAME", "--skype-username SKYPE_USERNAME", "Your skype username.") do |u|
+  options.on('-u SKYPE_USERNAME', '--skype-username SKYPE_USERNAME', 'Your skype username.') do |u|
     opts[:skype_username] = u
   end
 
-  options.on("-t TARGET_TO_EXPORT", "--target-username TARGET_TO_EXPORT",
-          "The user who you want to export your history with.") do |t|
+  options.on('-t TARGET_TO_EXPORT', '--target-username TARGET_TO_EXPORT',
+             'The user who you want to export your history with.') do |t|
     opts[:target] = t
   end
 
-  options.on("-o FILE", "--output-file FILE",
-          "File to output the history to, otherwise it will just be printed") do |o|
+  options.on('-l db_location', '--database-location TARGET_DB_EXPORT_FROM',
+             'The db to export your history from.') do |t|
+    opts[:location] = t
+  end
+
+  options.on('-o FILE', '--output-file FILE',
+             'File to output the history to, otherwise it will just be printed') do |o|
     opts[:output_file] = o
   end
 end.parse!
 
 if opts[:skype_username].nil?
-  puts "You need to provide your username -u SKYPE_USERNAME"
+  puts 'You need to provide your username -u SKYPE_USERNAME'
   exit
 elsif opts[:target].nil?
-  puts "You need to provide a username to export -t TARGET_TO_EXPORT"
+  puts 'You need to provide a username to export -t TARGET_TO_EXPORT'
   exit
 end
 
-db = Dataset.database_for_user(opts[:skype_username])
+if opts[:location]
+  ENV['SKYPE_DB_LOCATION'] = opts[:location]
+end
+
+db = Dataset.database_for_user(username: opts[:skype_username])
 
 if opts[:monthly]
   Dir.mkdir(opts[:target]) unless Dir.exist?(opts[:target])
-  date = Dataset.first_message_date_with_user(opts[:target], db)
+  date = Dataset.first_message_date_with_user(username: opts[:target], database: db)
   date = { year: date.year, month: date.month }
   current = Time.now
 
-  until date[:year] > current.year do
+  until date[:year] > current.year
     until date[:month] > 12
-      exit if (date[:month] > current.month && date[:year] == current.year)
+      exit if date[:month] > current.month && date[:year] == current.year
+
       dataset = Dataset.history_with_user_for_month(opts[:target], date[:year], date[:month], db)
-      SkypeExport.write_to_file(dataset, "#{opts[:target]}/#{date[:year]}.#{date[:month].to_s.rjust(2, '0')}.txt")
+
+      raise StandardError, "No results" if dataset.nil?
+
+      SkypeExport.write_to_file(dataset:, filename: "#{opts[:target]}/#{date[:year]}.#{date[:month].to_s.rjust(2, '0')}.txt")
+
       date[:month] += 1
     end
+
     date[:month] = 1
     date[:year] += 1
   end
 elsif opts[:yearly]
   Dir.mkdir(opts[:target]) unless Dir.exist?(opts[:target])
-  year = Dataset.first_message_date_with_user(opts[:target], db).year
+  year = Dataset.first_message_date_with_user(username: opts[:target], database: db).year
   current_year = Time.now.year
-  until year > current_year do
-    dataset = Dataset.history_with_user_for_year(opts[:target], year, db)
-    SkypeExport.write_to_file(dataset, "#{opts[:target]}/#{year}.txt")
+  until year > current_year
+    dataset = Dataset.history_with_user_for_year(username: opts[:target], year:, database: db)
+    SkypeExport.write_to_file(dataset:, filename: "#{opts[:target]}/#{year}.txt")
     year += 1
   end
 else
-  dataset = Dataset.history_with_user(opts[:target], db)
-  SkypeExport.write_to_file(dataset, "#{opts[:target]}.txt")
+  dataset = Dataset.history_with_user(username: opts[:target], database: db)
+
+  puts "DATA: #{dataset}"
+
+  SkypeExport.write_to_file(dataset:, filename: "#{opts[:target]}.txt")
 end
